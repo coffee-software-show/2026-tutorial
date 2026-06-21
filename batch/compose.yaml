@@ -1,0 +1,47 @@
+services:
+  mongodb:
+    image: 'mongo:latest'
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    environment:
+      - 'MONGO_INITDB_DATABASE=mydatabase'
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: >
+        mongosh --quiet --eval "
+          try {
+            rs.status();
+          } catch (e) {
+            rs.initiate({
+              _id: 'rs0',
+              members: [{ _id: 0, host: 'localhost:27017' }]
+            });
+          }
+        "
+      interval: 10s
+      start_period: 30s
+      timeout: 10s
+      retries: 5
+  grafana-lgtm:
+    image: 'grafana/otel-lgtm:latest'
+    ports:
+      - '3000:3000'
+      - '4317:4317'
+      - '4318:4318'
+#  mongodb:
+#    image: 'mongo:latest'
+#    command: [ "--replSet", "rs0", "--bind_ip_all" ]
+#    environment:
+#      - 'MONGO_INITDB_DATABASE=mydatabase'
+#      - 'MONGO_INITDB_ROOT_PASSWORD=secret'
+#      - 'MONGO_INITDB_ROOT_USERNAME=root'
+#    ports:
+#      - '27017:27017'
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=mydatabase'
+      - 'POSTGRES_PASSWORD=secret'
+      - 'POSTGRES_USER=myuser'
+    ports:
+      - '5432:5432'
