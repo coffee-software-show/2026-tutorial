@@ -72,7 +72,6 @@ class CustomerRepositoryTest {
     }
 
     @Test
-    @Commit
     void secure() {
 
         var user = new User(this.username, "", true, true, true, true,
