@@ -21,20 +21,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.batch.autoconfigure.JobExecutionEvent;
-import org.springframework.boot.batch.jdbc.autoconfigure.BatchJdbcAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import javax.sql.DataSource;
-import java.util.Map;
 
-@SpringBootApplication(exclude = {BatchJdbcAutoConfiguration.class})
+@SpringBootApplication
 public class BatchApplication {
 
     public static void main(String[] args) {
@@ -54,6 +51,9 @@ class BatchConfiguration {
 
         @Override
         public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+
+            hints.reflection().registerType(Customer.class, MemberCategory.values());
+
             hints.resources().registerResource(new ClassPathResource("/customers.csv"));
         }
     }
@@ -100,16 +100,27 @@ class BatchConfiguration {
 
     @Bean
     FlatFileItemReader<Customer> customerFlatFileItemReader(@Value("classpath:/customers.csv") Resource csv) {
-        return new FlatFileItemReaderBuilder<Customer>().name("customer-reader").resource(csv).delimited(c -> c.delimiter(",").names("id", "name", "email")).fieldSetMapper(fieldSet -> new Customer(fieldSet.readInt("id"), fieldSet.readString("name"), fieldSet.readString("email"))).build();
+        return new FlatFileItemReaderBuilder<Customer>() //
+                .name("customer-reader")
+                .resource(csv)
+                .delimited(c -> c.delimiter(",").names("id", "name", "email"))
+                .targetType(Customer.class)
+                .build();
     }
 
     @Bean
     JdbcBatchItemWriter<Customer> customerJdbcBatchItemWriter(DataSource dataSource) {
-        return new JdbcBatchItemWriterBuilder<Customer>().assertUpdates(true).dataSource(dataSource).sql("INSERT INTO customers(id, name, email) VALUES (:id, :name, :email) on conflict do nothing").itemSqlParameterSourceProvider(item -> new MapSqlParameterSource(Map.of("id", item.id(), "name", item.name(), "email", item.email()))).itemPreparedStatementSetter((item, ps) -> {
-            ps.setInt(1, item.id());
-            ps.setString(2, item.name());
-            ps.setString(3, item.email());
-        }).build();
+        return new JdbcBatchItemWriterBuilder<Customer>()//
+                .assertUpdates(true)//
+                .dataSource(dataSource)//
+                .sql("INSERT INTO customers(id, name, email) VALUES (:id, :name, :email) on conflict do nothing")//
+                .beanMapped()//
+                .itemPreparedStatementSetter((item, ps) -> {
+                    ps.setInt(1, item.id());
+                    ps.setString(2, item.name());
+                    ps.setString(3, item.email());
+                })//
+                .build();
     }
 
 

@@ -28,15 +28,6 @@ services:
       - '3000:3000'
       - '4317:4317'
       - '4318:4318'
-#  mongodb:
-#    image: 'mongo:latest'
-#    command: [ "--replSet", "rs0", "--bind_ip_all" ]
-#    environment:
-#      - 'MONGO_INITDB_DATABASE=mydatabase'
-#      - 'MONGO_INITDB_ROOT_PASSWORD=secret'
-#      - 'MONGO_INITDB_ROOT_USERNAME=root'
-#    ports:
-#      - '27017:27017'
   postgres:
     image: 'postgres:latest'
     environment:
