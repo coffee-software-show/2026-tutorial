@@ -27,9 +27,13 @@ import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.VirtualThreadTaskExecutor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
 
 @SpringBootApplication
 public class BatchApplication {
@@ -99,7 +103,9 @@ class BatchConfiguration {
     }
 
     @Bean
-    FlatFileItemReader<Customer> customerFlatFileItemReader(@Value("classpath:/customers.csv") Resource csv) {
+    FlatFileItemReader<Customer> customerFlatFileItemReader( //
+       @Value("classpath:/customers.csv") Resource csv //
+    ) { //
         return new FlatFileItemReaderBuilder<Customer>() //
                 .name("customer-reader") //
                 .resource(csv) //
@@ -124,11 +130,16 @@ class BatchConfiguration {
     }
 
 
+
+
     @Bean(STEP_FILES_TO_DB)
-    Step step(FlatFileItemReader<Customer> customerFlatFileItemReader, JdbcBatchItemWriter<Customer> customerJdbcBatchItemWriter) {
+    Step step(FlatFileItemReader<Customer> customerFlatFileItemReader,
+              AsyncTaskExecutor asyncTaskExecutor ,
+              JdbcBatchItemWriter<Customer> customerJdbcBatchItemWriter) {
         return new StepBuilder("files-to-db", this.repository)//
                 .<Customer, Customer>chunk(10) //
                 .reader(customerFlatFileItemReader) //
+                .taskExecutor(asyncTaskExecutor)
                 .processor(customer -> {
                     IO.println("processing " + customer);
                     return customer;
@@ -155,6 +166,9 @@ class BatchConfiguration {
 
     @EventListener
     void after(JobExecutionEvent event) {
-        IO.println("Job execution #" + event.getJobExecution() + " finished");
+        var startTime = event.getJobExecution().getStartTime();
+        var stopTime = event.getJobExecution().getLastUpdated();
+        IO.println("Job execution #" + event.getJobExecution() + " finished. started " +
+                startTime +" and finished " + stopTime);
     }
 }
