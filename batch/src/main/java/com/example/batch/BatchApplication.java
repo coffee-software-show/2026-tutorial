@@ -101,10 +101,10 @@ class BatchConfiguration {
     @Bean
     FlatFileItemReader<Customer> customerFlatFileItemReader(@Value("classpath:/customers.csv") Resource csv) {
         return new FlatFileItemReaderBuilder<Customer>() //
-                .name("customer-reader")
-                .resource(csv)
-                .delimited(c -> c.delimiter(",").names("id", "name", "email"))
-                .targetType(Customer.class)
+                .name("customer-reader") //
+                .resource(csv) //
+                .delimited(c -> c.delimiter(",").names("id", "name", "email")) //
+                .targetType(Customer.class) //
                 .build();
     }
 
@@ -126,10 +126,18 @@ class BatchConfiguration {
 
     @Bean(STEP_FILES_TO_DB)
     Step step(FlatFileItemReader<Customer> customerFlatFileItemReader, JdbcBatchItemWriter<Customer> customerJdbcBatchItemWriter) {
-        return new StepBuilder("files-to-db", this.repository).<Customer, Customer>chunk(10).reader(customerFlatFileItemReader).processor(customer -> {
-            IO.println("processing " + customer);
-            return customer;
-        }).writer(customerJdbcBatchItemWriter).faultTolerant().retryLimit(10).retry(IllegalArgumentException.class).build();
+        return new StepBuilder("files-to-db", this.repository)//
+                .<Customer, Customer>chunk(10) //
+                .reader(customerFlatFileItemReader) //
+                .processor(customer -> {
+                    IO.println("processing " + customer);
+                    return customer;
+                })//
+                .writer(customerJdbcBatchItemWriter)//
+                .faultTolerant()//
+                .retryLimit(10)//
+                .retry(IllegalArgumentException.class) //
+                .build();
     }
 
     @Bean(STEP_RESET)
