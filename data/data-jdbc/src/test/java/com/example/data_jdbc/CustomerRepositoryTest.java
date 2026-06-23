@@ -1,0 +1,48 @@
+package com.example.data_jdbc;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jdbc.test.autoconfigure.DataJdbcTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+
+import java.util.Set;
+
+@DataJdbcTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class CustomerRepositoryTest {
+
+    private final CustomerRepository repository;
+
+    private final String username = "josh@joshlong.com";
+
+    CustomerRepositoryTest(@Autowired CustomerRepository repository) {
+        this.repository = repository;
+    }
+
+    private Customer customer;
+
+    @BeforeEach
+    void before() {
+        this.repository.deleteAll();
+        this.customer = this.repository.save(new Customer(null, this.username,
+                "Josh Long", Set.of(
+                new LineItem(null, 1, "sku1"),
+                new LineItem(null, 2, "sku2")
+        )));
+    }
+
+    @Test
+    void customersByUsername() {
+        var byEmail = this.repository.findByUsername(this.username);
+        Assertions.assertEquals(customer.id(), byEmail.id(), "they should match");
+        Assertions.assertNotNull(byEmail, "there must be exactly one record matching this username");
+        Assertions.assertEquals(2, byEmail.lineItems().size(), "there must be exactly one line item");
+        Assertions.assertTrue(byEmail.lineItems()
+                .stream().anyMatch(li -> li.quantity() == 1 && li.sku().equals("sku1")));
+        Assertions.assertTrue(byEmail.lineItems()
+                .stream().anyMatch(li -> li.quantity() == 2 && li.sku().equals("sku2")));
+
+    }
+}

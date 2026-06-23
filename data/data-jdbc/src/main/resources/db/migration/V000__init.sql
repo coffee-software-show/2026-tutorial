@@ -1,7 +1,7 @@
 create table if not exists customer
 (
     id    serial primary key,
-    email text not null,
+    username text not null,
     name  text not null
 );
 
