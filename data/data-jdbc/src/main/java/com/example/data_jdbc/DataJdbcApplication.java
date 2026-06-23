@@ -1,15 +1,15 @@
 package com.example.data_jdbc;
 
 import org.jspecify.annotations.NonNull;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.jdbc.core.dialect.JdbcPostgresDialect;
+import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.security.data.repository.query.SecurityEvaluationContextExtension;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -30,6 +30,12 @@ public class DataJdbcApplication {
     JdbcPostgresDialect jdbcPostgresDialect() {
         return JdbcPostgresDialect.INSTANCE;
     }
+
+    @Bean
+    SecurityEvaluationContextExtension securityEvaluationContextExtension() {
+        return new SecurityEvaluationContextExtension();
+    }
+
 }
 
 @Controller
@@ -49,7 +55,12 @@ class CustomersController {
     }
 }
 
-interface CustomerRepository extends ListCrudRepository<@NonNull Customer, @NonNull Integer> {
+interface CustomerRepository
+        extends ListCrudRepository<@NonNull Customer, @NonNull Integer> {
+
+    @Query("select c from customer c where c.username = ?#{ principal?.id }")
+    Customer findByAuthenticatedUser();
+
     Customer findByUsername(String username);
 }
 

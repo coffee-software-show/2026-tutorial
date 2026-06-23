@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jdbc.test.autoconfigure.DataJdbcTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.test.annotation.Commit;
 
 import java.util.Set;
 
@@ -13,15 +14,15 @@ import java.util.Set;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CustomerRepositoryTest {
 
+    private final String username = "josh@joshlong.com";
+
     private final CustomerRepository repository;
 
-    private final String username = "josh@joshlong.com";
+    private Customer customer;
 
     CustomerRepositoryTest(@Autowired CustomerRepository repository) {
         this.repository = repository;
     }
-
-    private Customer customer;
 
     @BeforeEach
     void before() {
@@ -33,6 +34,8 @@ class CustomerRepositoryTest {
         )));
     }
 
+
+    @Commit
     @Test
     void customersByUsername() {
         var byEmail = this.repository.findByUsername(this.username);

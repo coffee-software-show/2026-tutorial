@@ -18,3 +18,4 @@ create table if not exists line_item
     quantity integer not null default 1,
     customer bigint references customer (id)
 );
+
