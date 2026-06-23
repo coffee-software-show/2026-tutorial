@@ -8,12 +8,13 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.jdbc.core.dialect.JdbcPostgresDialect;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.ListCrudRepository;
-import org.springframework.security.data.repository.query.SecurityEvaluationContextExtension;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.sql.DataSource;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -32,10 +33,9 @@ public class DataJdbcApplication {
     }
 
     @Bean
-    SecurityEvaluationContextExtension securityEvaluationContextExtension() {
-        return new SecurityEvaluationContextExtension();
+    JdbcUserDetailsManager jdbcUserDetailsManager(DataSource dataSource) {
+        return new JdbcUserDetailsManager(dataSource);
     }
-
 }
 
 @Controller
@@ -58,8 +58,9 @@ class CustomersController {
 interface CustomerRepository
         extends ListCrudRepository<@NonNull Customer, @NonNull Integer> {
 
-    @Query("select c from customer c where c.username = ?#{ principal?.id }")
+    @Query("SELECT * FROM customer WHERE username = :#{ principal?.username } ")
     Customer findByAuthenticatedUser();
+
 
     Customer findByUsername(String username);
 }

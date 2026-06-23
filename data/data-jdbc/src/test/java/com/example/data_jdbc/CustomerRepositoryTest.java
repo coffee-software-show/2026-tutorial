@@ -14,7 +14,7 @@ import java.util.Set;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CustomerRepositoryTest {
 
-    private final String username = "josh@joshlong.com";
+    private final String username = "josh";
 
     private final CustomerRepository repository;
 
@@ -30,8 +30,7 @@ class CustomerRepositoryTest {
         this.customer = this.repository.save(new Customer(null, this.username,
                 "Josh Long", Set.of(
                 new LineItem(null, 1, "sku1"),
-                new LineItem(null, 2, "sku2")
-        )));
+                new LineItem(null, 2, "sku2"))));
     }
 
 
