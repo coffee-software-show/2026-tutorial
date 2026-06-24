@@ -5,12 +5,6 @@ create table if not exists customer
     name  text not null
 );
 
--- create table if not exists orders
--- (
---     id          serial primary key,
---     customer_id bigint references customers (id)
--- );
---
 create table if not exists line_item
 (
     id       serial primary key,
