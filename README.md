@@ -15,16 +15,14 @@ So:
 ## Desk check
 - Sdkman 
 - Direnv
+- Mise
 - spring javaformat maven plugin 
 - Devtools
 - IDEs and their start.spring.io experiences
 - Testcontainers && Docker compose
 
-## support lifetimes for spring oss and enterprise projects 
-- app advisor (get dashaun in sf?)
-- Upgrading for fun and profit  
-
 ## beans to boot
+uses: postgres, data jdbc, flyway, actuator, opentelemetry, docker compose support, 
 - Spring Framework
 	- Build the above using the framework
 	- Events
@@ -34,6 +32,12 @@ So:
 - Start.spring.io 
 - auto configuration 
 - Starters
+
+## Optimizations
+- AOT 
+- java 27 Leyden 
+- Virtual threads
+- Graalvm 
 
 
 ## testing		
@@ -52,11 +56,10 @@ So:
 	- Meters 
 	- OpenTelemetry 
 
-## Optimizations
-- AOT 
-- Leyden 
-- Virtual threads
-- Graalvm 
+## Batch 
+uses: spring batch, jdbc, postgres, flyway, 
+- choose the jdbc implementation 
+- to laod all the dogs 
 
 ## JDBC
 - JdbcClient
@@ -67,15 +70,29 @@ So:
 - net.ttddyy.observation : datasource-micrometer-spring-boot-starter 
 
 ## web programming 
+### frontend client
 - Basics of the servlet api 
 - Controllers
-- MVC + jte 
+- MVC + jte || thymeleaf
 - Tomcat customization 
+
+### build a backend rest api 
+- the dogs api offers search, listing all the dogs, and saving new dogs 
+- initial implementation uses data jdbc 
+- ok but how do we connect our client to the backend api 
 
 ## http clients
 - The new starter
 - RestClient or RestTemplate  
 - Declarative interface clients
+- so now we have an http client and service. but this isnt the only game in town 
+- lets rebuild the application to use graphql 
+
+## graphql 
+- basically were just gonna copy and paste the existing jdbc repository 
+- build the api in graphql 
+- write in te graphql client using grapqhl client to call the downstream service 
+- 
 
 ## Spring security 101
 - The SecurityFilterChain
@@ -90,15 +107,6 @@ So:
 - Authorization 
 	- `AuthorizationManagerFactories`
 
-## Spring data
-- Repositories 
-- Spring data jdbc 
-- Spring data MongoDB 
-- Dto projections 
-- Auditing 
-- Spring security spel queries 
-- AOT repositories && graalvm 
-- @DataJpaTest and @AutoConfigureTestDatabase 
 
 ## spring authorization server && oauth 
 - How to configure one 
@@ -196,3 +204,48 @@ So:
 
 
 
+<!-- 
+
+# Spring Tutorial in 2027
+
+## basics
+* desk check with sdkman/direnv/mise
+* java 25 onward
+* jbang
+* beans to boot
+* performance with java aot + graalvm
+
+
+## data
+
+- all the datas in this csv file. we cant even begin until its loaded. postgres  + jdbc + batch. we _could_ try to do this on our own using jdbclient. but its error prone. lets use batch instead. 
+  - use docker compose support to spin up postgresql + redis + whatever else.
+- ok all the data is in the db. lets create our first cut of the service 
+
+interface DogService {
+	Collection<Dog> all();
+	Dog save (name,description);
+	Dog update (id,name,description);
+	Collection<Dog> search(String q);
+}
+
+* start a new project with webmvc + postgresql + rabbitmq + data jdbc + elasticsearch + flyway + pgvector + ollama 
+ - start with a simple jdbc + postgres impl using ilike %
+ - then move to spring data repos
+* create a service that has a findAll and a create method. the create
+* we have all this data in a csv file but we need it in our database
+
+## web: for the following  make sure to do both cleint and service
+* spring mvc api + spring mvc html page / restclient client (here weve got a thymeleaf page; this will be useful when we do an oauth client later)
+* spring graphql / graphqlclient
+* spring grpc / grpc client
+* spring cloud config server to centralize configuration 
+* spring cloud gateway (proxy the graphql and )
+* spring security 
+
+## ai 
+
+## modulith 
+## shell 
+
+ -->
