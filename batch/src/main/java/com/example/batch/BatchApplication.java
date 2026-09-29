@@ -1,33 +1,27 @@
 package com.example.batch;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.springframework.aot.hint.MemberCategory;
-import org.springframework.aot.hint.RuntimeHints;
-import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
 import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.batch.autoconfigure.JobExecutionEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportRuntimeHints;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import javax.sql.DataSource;
@@ -41,129 +35,87 @@ public class BatchApplication {
 
 }
 
-record Customer(int id, String name, String email) {
+
+record Dog(int id, String name, String description) {
 }
 
 @Configuration
-@ImportRuntimeHints({BatchConfiguration.ResourceHints.class, BatchConfiguration.Hints.class})
 class BatchConfiguration {
 
-    static class ResourceHints implements RuntimeHintsRegistrar {
-
-        @Override
-        public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
-
-            hints.reflection().registerType(Customer.class, MemberCategory.values());
-
-            hints.resources().registerResource(new ClassPathResource("/customers.csv"));
-        }
+    @Bean
+    Job job(JobRepository repository, ResetStepConfiguration resetStepConfiguration ,
+            IngestStepConfiguration step) {
+        var s1 = resetStepConfiguration.resetStep(null, null);
+        var s2 = step.step(null, null, null);
+        return new JobBuilder("job", repository)
+                .flow(s1)
+                .next(s2)
+                .build()
+                .incrementer(new RunIdIncrementer())
+                .build();
+    } 
+    
+    @Bean
+    JdbcClient jdbcClient (DataSource dataSource) {
+        return JdbcClient.create(dataSource);
     }
+}
 
-    static class Hints implements RuntimeHintsRegistrar {
-
-        @Override
-        public void registerHints(@NonNull RuntimeHints hints, @Nullable ClassLoader classLoader) {
-            for (var c : new Class[]{
-                    org.springframework.batch.core.repository.persistence.JobInstance.class,
-                    org.springframework.batch.core.repository.persistence.ExecutionContext.class,
-                    org.springframework.batch.core.repository.persistence.ExitStatus.class,
-                    org.springframework.batch.core.repository.persistence.StepExecution.class,
-                    org.springframework.batch.core.repository.persistence.JobExecution.class,
-                    org.springframework.batch.core.repository.persistence.JobParameter.class,
-            }) {
-                hints.reflection().registerType(c, MemberCategory.values());
-            }
-
-            var prefix = "org/springframework/batch/core/";
-            for (var r : new String[]{
-                    "schema-mongodb", //
-                    "schema-drop-mongodb"}) {
-                for (var suffix : "jsonl,js".split(",")) {
-                    var path = prefix + r + "." + suffix;
-                    var resource = new ClassPathResource(path);
-                    if (resource.exists()) {
-                        hints.resources().registerResource(resource);
-                    }
-                }
-            }
-        }
+@Configuration
+class ResetStepConfiguration { 
+    
+    @Bean
+    Step resetStep (
+            JdbcClient jdbcClient, 
+            JobRepository repository){
+        return new StepBuilder("resetStep" ,repository)
+                .tasklet((_, _) -> {
+                    jdbcClient.sql("delete from dog").update() ;
+                    return RepeatStatus.FINISHED;
+                })
+                .build();
     }
+    
+}
 
-    static final String STEP_FILES_TO_DB = "files-to-db";
-
-    static final String STEP_RESET = "reset";
-
-    private final JobRepository repository;
-
-    BatchConfiguration(JobRepository repository) {
-        this.repository = repository;
-    }
+@Configuration
+class IngestStepConfiguration {
 
     @Bean
-    FlatFileItemReader<Customer> customerFlatFileItemReader( //
-                                                             @Value("classpath:/customers.csv") Resource csv //
-    ) { //
-        return new FlatFileItemReaderBuilder<Customer>() //
-                .name("customer-reader") //
-                .resource(csv) //
-                .delimited(c -> c.delimiter(",").names("id", "name", "email")) //
-                .targetType(Customer.class) //
+    FlatFileItemReader<Dog> flatFileCsvItemReader(@Value("file:${HOME}/Drive/2026-tutorial/misc/dogs.csv") Resource csv) {
+        return new FlatFileItemReaderBuilder<Dog>()
+                .name("flatFileCsvItemReader")
+                .resource(csv)
+                .delimited(c -> c.delimiter(",").names("id", "name", "description", "dob", "owner",
+                        "gender", "image"))
+                .fieldSetMapper(fieldSet -> new Dog(fieldSet.readInt("id"),
+                        fieldSet.readString("name"), fieldSet.readString("description")))
+                .linesToSkip(1)
                 .build();
     }
 
     @Bean
-    JdbcBatchItemWriter<Customer> customerJdbcBatchItemWriter(DataSource dataSource) {
-        return new JdbcBatchItemWriterBuilder<Customer>()//
-                .assertUpdates(true)//
-                .dataSource(dataSource)//
-                .sql("INSERT INTO customers(id, name, email) VALUES (:id, :name, :email) on conflict do nothing")//
-                .beanMapped()//
+    JdbcBatchItemWriter<Dog> jdbcBatchItemWriter(DataSource dataSource) {
+        return new JdbcBatchItemWriterBuilder<Dog>()
                 .itemPreparedStatementSetter((item, ps) -> {
                     ps.setInt(1, item.id());
                     ps.setString(2, item.name());
-                    ps.setString(3, item.email());
-                })//
+                    ps.setString(3, item.description());
+                })
+                .sql("insert into dog (id, name, description) values (?, ?, ?)")
+                .dataSource(dataSource)
                 .build();
-    }
-
-
-    @Bean(STEP_FILES_TO_DB)
-    Step step(FlatFileItemReader<Customer> customerFlatFileItemReader,
-              AsyncTaskExecutor asyncTaskExecutor,
-              JdbcBatchItemWriter<Customer> customerJdbcBatchItemWriter) {
-        return new StepBuilder("files-to-db", this.repository)//
-                .<Customer, Customer>chunk(10) //
-                .reader(customerFlatFileItemReader) //
-                .taskExecutor(asyncTaskExecutor)
-                .processor(customer -> {
-                    IO.println("processing " + customer);
-                    return customer;
-                })//
-                .writer(customerJdbcBatchItemWriter)//
-                .faultTolerant()//
-                .retryLimit(10)//
-                .retry(IllegalArgumentException.class) //
-                .build();
-    }
-
-    @Bean(STEP_RESET)
-    Step cleanTableStep(JdbcClient db, JobRepository repository) {
-        return new StepBuilder("reset", repository).tasklet((contribution, chunkContext) -> {
-            db.sql("delete from customers").update();
-            return RepeatStatus.FINISHED;
-        }).build();
     }
 
     @Bean
-    Job job(@Qualifier(STEP_RESET) Step stepReset, @Qualifier(STEP_FILES_TO_DB) Step stepFilesToDb) {
-        return new JobBuilder("etl", this.repository).start(stepReset).next(stepFilesToDb).incrementer(new RunIdIncrementer()).build();
+    Step step(JobRepository repository, FlatFileItemReader<Dog> flatFileCsvItemReader,
+              ItemWriter<Dog> itemWriter) {
+        return new StepBuilder("step", repository)
+                .<Dog, Dog>chunk(10)
+                .reader(flatFileCsvItemReader)
+                .writer(itemWriter)
+                .build();
     }
 
-    @EventListener
-    void after(JobExecutionEvent event) {
-        var startTime = event.getJobExecution().getStartTime();
-        var stopTime = event.getJobExecution().getLastUpdated();
-        IO.println("Job execution #" + event.getJobExecution() + " finished. started " +
-                startTime + " and finished " + stopTime);
-    }
+
 }
