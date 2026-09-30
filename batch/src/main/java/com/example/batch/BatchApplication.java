@@ -1,15 +1,11 @@
 package com.example.batch;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.Step;
-import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
@@ -43,7 +39,7 @@ record Dog(int id, String name, String description) {
 class BatchConfiguration {
 
     @Bean
-    Job job(JobRepository repository, ResetStepConfiguration resetStepConfiguration ,
+    Job job(JobRepository repository, ResetStepConfiguration resetStepConfiguration,
             IngestStepConfiguration step) {
         var s1 = resetStepConfiguration.resetStep(null, null);
         var s2 = step.step(null, null, null);
@@ -53,41 +49,42 @@ class BatchConfiguration {
                 .build()
                 .incrementer(new RunIdIncrementer())
                 .build();
-    } 
-    
+    }
+
     @Bean
-    JdbcClient jdbcClient (DataSource dataSource) {
+    JdbcClient jdbcClient(DataSource dataSource) {
         return JdbcClient.create(dataSource);
     }
 }
 
 @Configuration
-class ResetStepConfiguration { 
-    
+class ResetStepConfiguration {
+
     @Bean
-    Step resetStep (
-            JdbcClient jdbcClient, 
-            JobRepository repository){
-        return new StepBuilder("resetStep" ,repository)
+    Step resetStep(
+            JdbcClient jdbcClient,
+            JobRepository repository) {
+        return new StepBuilder("resetStep", repository)
                 .tasklet((_, _) -> {
-                    jdbcClient.sql("delete from dog").update() ;
+                    jdbcClient.sql("delete from dog").update();
                     return RepeatStatus.FINISHED;
                 })
                 .build();
     }
-    
+
 }
 
 @Configuration
 class IngestStepConfiguration {
 
     @Bean
-    FlatFileItemReader<Dog> flatFileCsvItemReader(@Value("file:${HOME}/Drive/2026-tutorial/misc/dogs.csv") Resource csv) {
+    FlatFileItemReader<Dog> flatFileCsvItemReader(@Value("classpath:/animals.csv") Resource csv) {
         return new FlatFileItemReaderBuilder<Dog>()
                 .name("flatFileCsvItemReader")
                 .resource(csv)
-                .delimited(c -> c.delimiter(",").names("id", "name", "description", "dob", "owner",
-                        "gender", "image"))
+                .delimited(c -> c.delimiter(",")
+                        .names("id", "name", "description", "dob",
+                        "gender", "type"))
                 .fieldSetMapper(fieldSet -> new Dog(fieldSet.readInt("id"),
                         fieldSet.readString("name"), fieldSet.readString("description")))
                 .linesToSkip(1)

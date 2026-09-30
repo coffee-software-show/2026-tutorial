@@ -1,4 +1,5 @@
 services:
+  
   pgvector:
     image: 'pgvector/pgvector:pg16'
     environment:
@@ -9,3 +10,14 @@ services:
       - "org.springframework.boot.service-connection=postgres"
     ports:
       - '5432:5432'
+  
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:9.3.3'
+    environment:
+      - 'ELASTIC_PASSWORD=secret'
+      - 'discovery.type=single-node'
+      - 'xpack.security.enabled=false'
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+

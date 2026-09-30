@@ -22,7 +22,8 @@ So:
 - Testcontainers && Docker compose
 
 ## beans to boot
-uses: postgres, data jdbc, flyway, actuator, opentelemetry, docker compose support, 
+uses: postgres (pgvector), data jdbc, flyway, actuator, opentelemetry, docker compose support,
+notes: we need to have a table called animals in which we find just a few records. we'll need to load a bunch manually, later using batch. make sure to pre-define this sql file and sql table so we can show them and use them to init the db.
 - Spring Framework
 	- Build the above using the framework
 	- Events
@@ -37,8 +38,7 @@ uses: postgres, data jdbc, flyway, actuator, opentelemetry, docker compose suppo
 - AOT 
 - java 27 Leyden 
 - Virtual threads
-- Graalvm 
-
+- Graalvm
 
 ## testing		
 - Basics of testing 
@@ -57,52 +57,69 @@ uses: postgres, data jdbc, flyway, actuator, opentelemetry, docker compose suppo
 	- OpenTelemetry 
 
 ## Batch 
+weve got a few records, but we wanna load all of 'em. we could have millions! this is a job for spring batch! 
 uses: spring batch, jdbc, postgres, flyway, 
 - choose the jdbc implementation 
-- to laod all the animals.
+- to load all the animals from `src/main/resources/animals.csv` to `animals`.
 
-### build a backend rest api 
-- the dogs api offers search, listing all the dogs, and saving new dogs 
-- initial implementation uses data jdbc 
+### data 
+- now that we have our table setup. let's build a service.
+- the animals ('pooch palace') api offers search, listing all the animals,  saving new animals, and updating them (this is important!); well eventualyl also support adopting them! but.. not now. well also eventually support asking ai questons abotu them
+- the initial implementation uses jdbc
+- then use spring data jdbc to implement the repository
 - ok but how do we connect our client to the backend api 
 - eventually, well support: looking at all the animals in the shelter, asking ai questons abotu them, searching with elasticsearch, and adopting
 
-## data
-- JdbcClient
-- JdbcTemplate
+## jdbc
+- `JdbcClient`
 - lazy connections
-- schema initialization 
+- schema initialization - earlier we saw this in the batch section so no need to linger
 - Flyway 
 - net.ttddyy.observation : datasource-micrometer-spring-boot-starter 
 - implement the repository using spring data jdbc
 - use spring data elasticsearch to implement the search capability 
+- make sure people see that the initializr has the ability to give me a docker image for elasticsearch
+- we need to read everything, then pass each record back to the update method to force the elasticsearch indexing and so on.
 
-## web programming 
+## web programming
+its cool that weve got the data situation worked out, but if we build a data layer and dont give our network clients a way to access it, did we actually build it? no. no we didnt. we need an API!
+
+### apis with spring mvc 
+- build a simple spring mvc api (`http-service`) on top of the data layer that supports the search, read, update
+- virtual threads 
+- nice to have the api, but we need a client that can read it all
+
 ### frontend client
-- Basics of the servlet api 
-- Controllers
-- MVC + jte || thymeleaf
-- Tomcat customization 
+- new application called `http-client`
+- basics of the servlet api 
+- controllers
+- mvc + jte || thymeleaf
+- tomcat customization
+- build a simple .html page. it'll call the new service we've just stood up. but how?
 
 ## http clients
-- The new starter
-- RestClient or RestTemplate  
-- Declarative interface clients
-- so now we have an http client and service. but this isnt the only game in town 
-- lets rebuild the application to use graphql 
+- the new starter
+- `RestClient`
+- declarative interface clients
+- so now we have an http client and service. but this isn't the only game in town 
+- while were at it, lets pull in some catfacts 
+- at this point, we should have a animals controller in the root package supporting `POST` and `GET` requests for `/dogs` and `/cats`, filtering behind the scenes the one `animals` table. we should have a search '/search' endpoint
+- let's rebuild the application to use graphql 
 
 ## graphql 
-- basically were just gonna copy and paste the existing jdbc repository 
+- basically were just gonna copy and paste the existing data service into a new module called `graphql-serviec` 
 - build the api in graphql 
-- write in te graphql client using grapqhl client to call the downstream service 
-
+- write in the `graphql-client` using grapqhl client to call the downstream service 
 
 ## grpc 
-
 - basically just copy the same backend repository stuff 
 - implement the service 
-- implement the client 
+- implement the client
 
+## modulith
+- go back to the http example from earlier.
+- add a new adoptions method to the service. expose it via the animaals controller 
+- add vet module 
 
 
 ## AI
@@ -121,8 +138,6 @@ uses: spring batch, jdbc, postgres, flyway,
 - Observability (token usage matters!)
 
 
-## modulith 
-- lets look at the http example from earlier. 
 
 ## integration 
 
