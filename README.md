@@ -15,7 +15,7 @@ So:
 ## Desk check
 - Sdkman 
 - Direnv
-- Mise
+- !!Mise!!
 - spring javaformat maven plugin 
 - Devtools
 - IDEs and their start.spring.io experiences
@@ -59,15 +59,23 @@ uses: postgres, data jdbc, flyway, actuator, opentelemetry, docker compose suppo
 ## Batch 
 uses: spring batch, jdbc, postgres, flyway, 
 - choose the jdbc implementation 
-- to laod all the dogs 
+- to laod all the animals.
 
-## JDBC
+### build a backend rest api 
+- the dogs api offers search, listing all the dogs, and saving new dogs 
+- initial implementation uses data jdbc 
+- ok but how do we connect our client to the backend api 
+- eventually, well support: looking at all the animals in the shelter, asking ai questons abotu them, searching with elasticsearch, and adopting
+
+## data
 - JdbcClient
 - JdbcTemplate
-- AbstractRoutingDataSource
-- Schema initialization 
+- lazy connections
+- schema initialization 
 - Flyway 
 - net.ttddyy.observation : datasource-micrometer-spring-boot-starter 
+- implement the repository using spring data jdbc
+- use spring data elasticsearch to implement the search capability 
 
 ## web programming 
 ### frontend client
@@ -75,11 +83,6 @@ uses: spring batch, jdbc, postgres, flyway,
 - Controllers
 - MVC + jte || thymeleaf
 - Tomcat customization 
-
-### build a backend rest api 
-- the dogs api offers search, listing all the dogs, and saving new dogs 
-- initial implementation uses data jdbc 
-- ok but how do we connect our client to the backend api 
 
 ## http clients
 - The new starter
@@ -92,7 +95,36 @@ uses: spring batch, jdbc, postgres, flyway,
 - basically were just gonna copy and paste the existing jdbc repository 
 - build the api in graphql 
 - write in te graphql client using grapqhl client to call the downstream service 
-- 
+
+
+## grpc 
+
+- basically just copy the same backend repository stuff 
+- implement the service 
+- implement the client 
+
+
+
+## AI
+- we have an endpoint in our http example thatll return all the dogs and another one to adopt an animal and another to search. lets add one 
+- Ollama or?
+- ChatClient
+- User prompt 
+- System prompt
+- Skills 
+- Spring Ai sessions for memory
+- RAG with question answer advisor 
+- Actuator 
+- mcp 
+	- Security of mcp
+- testing with judges 
+- Observability (token usage matters!)
+
+
+## modulith 
+- lets look at the http example from earlier. 
+
+## integration 
 
 ## Spring security 101
 - The SecurityFilterChain
@@ -123,19 +155,6 @@ uses: spring batch, jdbc, postgres, flyway,
 - security of gateway proxies services
 	- Building a route that loads the UI and backend api from the same place w/ token relay
 
-## AI
-- Ollama or?
-- ChatClient
-- User prompt 
-- System prompt
-- Skills 
-- Spring Ai sessions for memory
-- RAG with question answer advisor 
-- Actuator 
-- mcp 
-	- Security of mcp
-- testing with judges 
-- Observability (token usage matters!)
 
 ## Graphql 
 	- Schema
