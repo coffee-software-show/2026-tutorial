@@ -15,8 +15,6 @@ import java.util.Collection;
 import java.util.Set;
 
 // Spring Boot
-
-
 @SpringBootApplication
 public class BeansToBootApplication {
 
@@ -27,7 +25,7 @@ public class BeansToBootApplication {
 
     @Bean
     ApplicationRunner runner (AnimalRepository repository) {
-        return a -> test(repository);
+        return _ -> test(repository);
     }
 
     public static void main(String[] args) {
