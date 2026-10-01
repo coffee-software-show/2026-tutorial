@@ -1,5 +1,7 @@
-package com.example.beans_to_boot.two;
+package com.example.beans_to_boot.three;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -7,9 +9,14 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
+import java.util.Set;
 
-// "good" OOP
+// AOP with jdk/cglib proxies
+
 public class BeansToBootApplication {
 
     public static void main(String[] args) {
@@ -19,18 +26,21 @@ public class BeansToBootApplication {
         var txManager = new DataSourceTransactionManager(db);
         var transactionTemplate = new TransactionTemplate(txManager);
         var animals = new DefaultAnimalRepository3(jdbc);
-        var txAnimals = new TransactionalAnimalRepository(transactionTemplate, animals);
+        var txAnimals = (AnimalRepository) Transactions.proxy(animals, transactionTemplate);
         test(txAnimals);
     }
 
     static void test(AnimalRepository repository) {
+
         repository.deleteAll();
+
         var fido = repository.save("Fido", "A friendly dog", Animal.Type.DOG);
         var rex = repository.save("Rex", "A friendly dog", Animal.Type.DOG);
         var garfield = repository.save("Garfield", "A friendly dog", Animal.Type.CAT);
-        IO.println(fido);
-        IO.println(garfield);
-        IO.println(rex);
+
+        for (var a : Set.of(fido, rex, garfield))
+            IO.println(a);
+
         IO.println("===================================");
         repository.findAll().forEach(IO::println);
     }
@@ -46,6 +56,7 @@ interface AnimalRepository {
 }
 
 record Animal(int id, String name, String description, Type type) {
+
     enum Type {
         DOG,
         CAT,
@@ -56,30 +67,42 @@ record Animal(int id, String name, String description, Type type) {
     }
 }
 
-class TransactionalAnimalRepository implements AnimalRepository {
+class Transactions {
 
-    private final TransactionTemplate transactionTemplate;
-
-    private final AnimalRepository repository;
-
-    TransactionalAnimalRepository(TransactionTemplate transactionTemplate, AnimalRepository repository) {
-        this.transactionTemplate = transactionTemplate;
-        this.repository = repository;
+    private static Object jdkProxy(Object target, TransactionTemplate tt) {
+        return Proxy.newProxyInstance(target.getClass().getClassLoader(),
+                target.getClass().getInterfaces(), (_, method, args) ->
+                        delegate(tt, target, method, args));
     }
 
-    @Override
-    public Collection<Animal> findAll() {
-        return this.transactionTemplate.execute(status -> this.repository.findAll());
+    static Object proxy(Object target, TransactionTemplate tt) {
+        var pfb = new ProxyFactoryBean();
+        pfb.setTarget(target);
+        pfb.setProxyTargetClass(true);
+        for (var c : target.getClass().getInterfaces())
+            pfb.addInterface(c);
+        pfb.addAdvice((MethodInterceptor) invocation ->
+                delegate(tt, target, invocation.getMethod(), invocation.getArguments()));
+        return pfb.getObject();
     }
 
-    @Override
-    public Animal save(String name, String description, Animal.Type type) {
-        return this.transactionTemplate.execute(s -> this.repository.save(name, description, type));
-    }
-
-    @Override
-    public void deleteAll() {
-        this.transactionTemplate.executeWithoutResult(s -> this.repository.deleteAll());
+    private static Object delegate(
+            TransactionTemplate transactionTemplate,//
+            Object target, //
+            Method m,//
+            Object[] parms//
+    ) {
+        return transactionTemplate.execute(_ -> {
+            try {
+                IO.println("before the tx");
+                var res = m.invoke(target, parms);
+                IO.println("after the tx");
+                return res;
+            }//
+            catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
 
@@ -100,13 +123,13 @@ class DefaultAnimalRepository3 implements AnimalRepository {
     @Override
     public Collection<Animal> findAll() {
         return this.jdbcClient
-                .sql("select * from animal ")
+                .sql("select * from animal order by id")
                 .params()
                 .query(this.animalRowMapper)
                 .list();
     }
 
-    public Animal findById(int id) {
+    private Animal findById(int id) {
         return this.jdbcClient
                 .sql("select * from animal where id =? ")
                 .params(id)
