@@ -1,2 +1,5 @@
 [tools]
 java = "27.0.0"
+
+[env]
+_.path = "{{config_root}}/bin"
