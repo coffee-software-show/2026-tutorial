@@ -106,6 +106,9 @@ its cool that weve got the data situation worked out, but if we build a data lay
 - at this point, we should have a animals controller in the root package supporting `POST` and `GET` requests for `/dogs` and `/cats`, filtering behind the scenes the one `animals` table. we should have a search '/search' endpoint
 - let's rebuild the application to use graphql 
 
+## spring shell
+- now we can use the httpclient to call the backend api.
+
 ## graphql 
 - basically were just gonna copy and paste the existing data service into a new module called `graphql-serviec` 
 - build the api in graphql 
@@ -116,11 +119,28 @@ its cool that weve got the data situation worked out, but if we build a data lay
 - implement the service 
 - implement the client
 
+
 ## modulith
 - go back to the http example from earlier.
 - add a new adoptions method to the service. expose it via the animaals controller 
 - add vet module 
+- testing 
+- documentation
+- erxternalization via many things including rabbitmq and integration
 
+
+## rabbitmq 
+- show spring for amqp defining the exchange, binding, and queue for the spring modulith app. it will listen for the results and then print them out. 
+- this is nice but u can see why this sort of plug-and-play would get tedious as soon as u started dealing with other kinds of evented sources and sinks 
+- what if we wanted to write the results out to a filesystem, or to kafka, or an email system, or whatever?
+- what we need is some way to integrate
+
+## integration
+- patterns of EAI 
+- gregor hohpe + bobby woolf
+- pipes and filters
+
+## 
 
 ## AI
 - we have an endpoint in our http example thatll return all the dogs and another one to adopt an animal and another to search. lets add one 
