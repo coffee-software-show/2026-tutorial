@@ -1,9 +1,15 @@
-package com.example.beans_to_boot.five;
+package com.example.beans_to_boot.six;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.MemberCategory;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.aot.hint.TypeReference;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jdbc.core.dialect.JdbcPostgresDialect;
@@ -11,7 +17,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
@@ -19,6 +24,7 @@ import java.util.Set;
 
 // Spring Boot
 @SpringBootApplication
+@ImportRuntimeHints(BeansToBootApplication.Hints.class)
 public class BeansToBootApplication {
 
     @EventListener
@@ -30,11 +36,24 @@ public class BeansToBootApplication {
     ApplicationRunner runner(AnimalRepository repository) {
         return _ -> test(repository);
     }
-//
-//    public static void main(String[] args) {
-//        SpringApplication.run(BeansToBootApplication.class, args);
-//    }
 
+    public static void main(String[] args) {
+        SpringApplication.run(BeansToBootApplication.class, args);
+    }
+
+    static class Hints implements RuntimeHintsRegistrar {
+
+        @Override
+        public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+            hints.reflection().registerType(TypeReference.of("com.google.protobuf.ExtensionRegistry"),
+                    MemberCategory.values());
+        }
+    }
+
+    @Bean
+    JdbcPostgresDialect jdbcPostgresDialect() {
+        return JdbcPostgresDialect.INSTANCE;
+    }
 
     static void test(AnimalRepository repository) {
 

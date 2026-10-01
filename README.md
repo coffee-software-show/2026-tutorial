@@ -53,6 +53,7 @@ What would happen if we wanted to add security, logging, auditing, etc.?
 MyConfiguration is deleted outright. A single @SpringBootApplication replaces @ConfiguratopertySource, and all four @Bean methods vanish: auto-configuration builds the DataSource(a pooled HikariCP one, not DriverManagerDataSource) from the same properties, the transaction manager, and the JdbcClient. @EnableTransactionManagement is gone as well since Boot enables it by default —   the repository keeps only @Transactional. getBean is replaced by an ApplicationRunner @Beitory by injection, and with spring-boot-docker-compose and schema.sql on the classpath,Boot also starts the Postgres container from compose.yaml, wires its connection details, and creates the animal table — all things you had to do by hand in steps one through four.                          
 One thing to check before demoing five: DefaultAnimalRepository3 lost its @Repository along with the other annotations, so component scanning won't register it and runner(AnimalRepository) will fail with a NoSuchBeanDefinitionException. The other four packages don't need a stereotype (they're was @Repository — it looks like it was dropped a step too far.
 
+`six` - add `JdbcPostgresDialect` and `RuntimeHints` to enable GraalVM native image compilation and to fix a regression in grpc
 
 ## Optimizations
 - AOT 
