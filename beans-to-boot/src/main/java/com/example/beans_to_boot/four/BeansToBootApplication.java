@@ -1,9 +1,6 @@
 package com.example.beans_to_boot.four;
 
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
@@ -12,6 +9,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +20,7 @@ import java.util.Collection;
 import java.util.Set;
 
 // Spring Framework
+@ComponentScan
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")
 @Configuration
@@ -46,11 +45,6 @@ class MyConfiguration {
     }
 
     @Bean
-    AnimalRepository animalRepository(JdbcClient jdbcClient) {
-        return new DefaultAnimalRepository3(jdbcClient);
-    }
-
-    @Bean
     TransactionTemplate transactionTemplate(PlatformTransactionManager platformTransactionManager) {
         return new TransactionTemplate(platformTransactionManager);
     }
@@ -59,7 +53,6 @@ class MyConfiguration {
     void after(ContextRefreshedEvent contextRefreshedEvent) {
         IO.println("application context refreshed " + contextRefreshedEvent);
     }
-
 
 }
 
@@ -109,6 +102,7 @@ record Animal(int id, String name, String description, Type type) {
     }
 }
 
+@Repository
 @Transactional
 class DefaultAnimalRepository3 implements AnimalRepository {
 

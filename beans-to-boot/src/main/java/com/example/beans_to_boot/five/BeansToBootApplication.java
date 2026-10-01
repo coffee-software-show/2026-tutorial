@@ -1,63 +1,37 @@
 package com.example.beans_to_boot.five;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.springframework.aop.framework.ProxyFactoryBean;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.Set;
 
-// Spring Framework
+// Spring Boot
 
-@Configuration
-class MyConfiguration {
 
-    @Bean
-    JdbcClient jdbcClient(DataSource dataSource) {
-        return JdbcClient.create(dataSource);
-    }
-
-    @Bean
-    AnimalRepository animalRepository(JdbcClient jdbcClient, TransactionTemplate transactionTemplate) {
-        var target = new DefaultAnimalRepository3(jdbcClient);
-        return (AnimalRepository) Transactions.proxy(target, transactionTemplate);
-    }
-
-    @Bean
-    TransactionTemplate transactionTemplate(PlatformTransactionManager platformTransactionManager) {
-        return new TransactionTemplate(platformTransactionManager);
-    }
+@SpringBootApplication
+public class BeansToBootApplication {
 
     @EventListener
     void after(ContextRefreshedEvent contextRefreshedEvent) {
         IO.println("application context refreshed " + contextRefreshedEvent);
     }
 
-}
-
-public class BeansToBootApplication {
+    @Bean
+    ApplicationRunner runner (AnimalRepository repository) {
+        return a -> test(repository);
+    }
 
     public static void main(String[] args) {
-        var ac = new AnnotationConfigApplicationContext(MyConfiguration.class);
-        var txAnimals = ac.getBean(AnimalRepository.class);
-        test(txAnimals);
+         SpringApplication.run(BeansToBootApplication.class,args);
     }
 
     static void test(AnimalRepository repository) {
@@ -97,45 +71,7 @@ record Animal(int id, String name, String description, Type type) {
     }
 }
 
-class Transactions {
-
-    private Object jdkProxy(Object target, TransactionTemplate tt) {
-        return Proxy.newProxyInstance(target.getClass().getClassLoader(),
-                target.getClass().getInterfaces(), (_, method, args) ->
-                        delegate(tt, target, method, args));
-    }
-
-    static Object proxy(Object target, TransactionTemplate tt) {
-        var pfb = new ProxyFactoryBean();
-        pfb.setTarget(target);
-        pfb.setProxyTargetClass(true);
-        for (var c : target.getClass().getInterfaces())
-            pfb.addInterface(c);
-        pfb.addAdvice((MethodInterceptor) invocation ->
-                delegate(tt, target, invocation.getMethod(), invocation.getArguments()));
-        return pfb.getObject();
-    }
-
-    private static Object delegate(
-            TransactionTemplate transactionTemplate,//
-            Object target, //
-            Method m,//
-            Object[] parms//
-    ) {
-        return transactionTemplate.execute(_ -> {
-            try {
-                IO.println("before the tx");
-                var res = m.invoke(target, parms);
-                IO.println("after the tx");
-                return res;
-            }//
-            catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-}
-
+@Transactional
 class DefaultAnimalRepository3 implements AnimalRepository {
 
     private final JdbcClient jdbcClient;
