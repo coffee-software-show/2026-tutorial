@@ -140,7 +140,6 @@ its cool that weve got the data situation worked out, but if we build a data lay
 - gregor hohpe + bobby woolf
 - pipes and filters
 
-## 
 
 ## AI
 - we have an endpoint in our http example thatll return all the dogs and another one to adopt an animal and another to search. lets add one 
@@ -157,9 +156,6 @@ its cool that weve got the data situation worked out, but if we build a data lay
 - testing with judges 
 - Observability (token usage matters!)
 
-
-
-## integration 
 
 ## Spring security 101
 - The SecurityFilterChain
