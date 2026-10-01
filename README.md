@@ -34,11 +34,37 @@ notes: we need to have a table called animals in which we find just a few record
 - auto configuration 
 - Starters
 
+### notes
+`one` — "mistakes were made" (raw JDBC)
+Establishes the domain (Animal record + Type enum) and the AnimalRepository interface, then gives you three implementations stacked in one file as mini-steps. DefaultAnimalRepository1 is the worst case: it `new`s its own `DriverManagerDataSource` as a field, so the class hard-codes its connection s test or reconfigure. DefaultAnimalRepository2 is the first real improvement — theDataSource is constructor-injected (plain dependency injection, no framework), but every method still manages Connection/PreparedStatement/ResultSet by hand, wraps everything in try-with-resources, and
+swallows SQLException into RuntimeException; findById even string-concatenates the id inttory3 swaps all that boilerplate for Spring's JdbcClient and a single reusableRowMapper<Animal>, collapsing ~60 lines of JDBC ceremony into fluent sql(...).params(...).query(...) calls — and main wires it up by hand.
+
+`two` — "good OOP" (decoration instead of duplication)
+The dead-end implementations are gone; only the JdbcClient version survives. The new idea is transactions, and the point is that you add them without touching the repository: TransactionalAnimalRepository
+implements the same AnimalRepository interface, holds a TransactionTemplate and a delegattransactionTemplate.execute(...). main now hand-builds the whole object graph — DataSource → JdbcClient → DataSourceTransactionManager → TransactionTemplate → repository → transactional wrapper. This is textbook decorator composition, and its flaw is obvious: the wrapper must re-declare and
+re-implement every single interface method, so the cross-cutting concern scales linearly
+What would happen if we wanted to add security, logging, auditing, etc.?  
+
+`three` — AOP with JDK/CGLIB proxies  Replaces the hand-written decorator with a Transactions helper that generates the wrapper flavors: a jdkProxy using java.lang.reflect.Proxy (interface-only), and the proxy methodactually used, which goes through Spring's ProxyFactoryBean with setProxyTargetClass(true) and a MethodInterceptor advice — i.e. CGLIB-style subclass proxying that works even without an interface. Both funnel into one delegate method that opens the transaction, reflectively invokes the targtx / after the tx so you can see the advice firing. Same behavior as two, but thetransactional concern is now written once for all methods.
+
+`four` — Spring Framework (the container does the wiring) The manual main-method object graph becomes declarative configuration. MyConfiguration is @Configuration + @ComponentScan + @EnableTransactionManagement + @PropertySource, with @Bean methods for the        DataSource, PlatformTransactionManager, JdbcClient, and TransactionTemplate; the connecti code into application.properties and is read via Environment. The repository just gets@Repository + @Transactional — the hand-rolled proxy from three disappears because @EnableTransactionManagement registers the BeanPostProcessor that creates exactly that proxy for you. main shrinks to new  AnnotationConfigApplicationContext(MyConfiguration.class) plus a getBean lookup, and an @freshedEvent shows the lifecycle hook.
+
+`five` — Spring Boot (the configuration disappears too)
+MyConfiguration is deleted outright. A single @SpringBootApplication replaces @ConfiguratopertySource, and all four @Bean methods vanish: auto-configuration builds the DataSource(a pooled HikariCP one, not DriverManagerDataSource) from the same properties, the transaction manager, and the JdbcClient. @EnableTransactionManagement is gone as well since Boot enables it by default —   the repository keeps only @Transactional. getBean is replaced by an ApplicationRunner @Beitory by injection, and with spring-boot-docker-compose and schema.sql on the classpath,Boot also starts the Postgres container from compose.yaml, wires its connection details, and creates the animal table — all things you had to do by hand in steps one through four.                          
+One thing to check before demoing five: DefaultAnimalRepository3 lost its @Repository along with the other annotations, so component scanning won't register it and runner(AnimalRepository) will fail with a NoSuchBeanDefinitionException. The other four packages don't need a stereotype (they're was @Repository — it looks like it was dropped a step too far.
+
+
 ## Optimizations
 - AOT 
 - java 27 Leyden 
 - Virtual threads
 - Graalvm
+
+
+### notes 
+in this section, you just take the code from the previous step and add a few optimizations. 
+* `spring.threads.virtual.enabled=true`.
+* 
 
 ## testing		
 - Basics of testing 

@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class BeansToBootApplication {
 
+    /*
     public static void main(String[] args) {
         var db = new DriverManagerDataSource(
                 "jdbc:postgresql://localhost:5432/mydatabase", "myuser", "secret");
@@ -34,6 +35,7 @@ public class BeansToBootApplication {
         var txAnimals = (AnimalRepository) Transactions.proxy(animals, transactionTemplate);
         test(txAnimals);
     }
+     */
 
     static void test(AnimalRepository repository) {
 

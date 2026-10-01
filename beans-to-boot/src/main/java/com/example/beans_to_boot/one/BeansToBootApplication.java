@@ -12,6 +12,7 @@ import java.util.Collection;
 // mistakes were made.
 public class BeansToBootApplication {
 
+    /*
     public static void main(String[] args) {
         var db = new DriverManagerDataSource(
                 "jdbc:postgresql://localhost:5432/mydatabase", "myuser", "secret");
@@ -19,6 +20,7 @@ public class BeansToBootApplication {
         var animals = new DefaultAnimalRepository3(jdbc);
         test(animals);
     }
+    */
 
     static void test(AnimalRepository repository) {
         repository.deleteAll();

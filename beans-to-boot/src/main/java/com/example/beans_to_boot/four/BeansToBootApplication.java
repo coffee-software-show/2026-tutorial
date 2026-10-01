@@ -59,11 +59,11 @@ class MyConfiguration {
 
 public class BeansToBootApplication {
 
-    public static void main(String[] args) {
+   /* public static void main(String[] args) {
         var ac = new AnnotationConfigApplicationContext(MyConfiguration.class);
         var txAnimals = ac.getBean(AnimalRepository.class);
         test(txAnimals);
-    }
+    }*/
 
     static void test(AnimalRepository repository) {
 

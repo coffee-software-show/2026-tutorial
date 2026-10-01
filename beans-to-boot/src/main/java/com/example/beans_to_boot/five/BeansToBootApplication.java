@@ -9,6 +9,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
@@ -24,12 +26,12 @@ public class BeansToBootApplication {
     }
 
     @Bean
-    ApplicationRunner runner (AnimalRepository repository) {
+    ApplicationRunner runner(AnimalRepository repository) {
         return _ -> test(repository);
     }
 
     public static void main(String[] args) {
-         SpringApplication.run(BeansToBootApplication.class,args);
+        SpringApplication.run(BeansToBootApplication.class, args);
     }
 
     static void test(AnimalRepository repository) {
@@ -69,6 +71,7 @@ record Animal(int id, String name, String description, Type type) {
     }
 }
 
+@Repository
 @Transactional
 class DefaultAnimalRepository3 implements AnimalRepository {
 

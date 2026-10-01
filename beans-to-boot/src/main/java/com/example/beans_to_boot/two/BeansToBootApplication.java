@@ -12,6 +12,7 @@ import java.util.Collection;
 // "good" OOP
 public class BeansToBootApplication {
 
+    /*
     public static void main(String[] args) {
         var db = new DriverManagerDataSource(
                 "jdbc:postgresql://localhost:5432/mydatabase", "myuser", "secret");
@@ -21,7 +22,7 @@ public class BeansToBootApplication {
         var animals = new DefaultAnimalRepository3(jdbc);
         var txAnimals = new TransactionalAnimalRepository(transactionTemplate, animals);
         test(txAnimals);
-    }
+    } */
 
     static void test(AnimalRepository repository) {
         repository.deleteAll();
