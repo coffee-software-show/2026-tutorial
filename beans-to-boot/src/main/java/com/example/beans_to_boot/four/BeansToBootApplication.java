@@ -1,37 +1,74 @@
-package com.example.beans_to_boot.three;
+package com.example.beans_to_boot.four;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.jspecify.annotations.Nullable;
-import org.springframework.aop.framework.ProxyFactoryBean;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import javax.sql.DataSource;
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
-// AOP with jdk/cglib proxies
+// Spring Framework
+@EnableTransactionManagement
+@PropertySource("classpath:application.properties")
+@Configuration
+class MyConfiguration {
+
+    @Bean
+    DriverManagerDataSource driverManagerDataSource(Environment environment) {
+        return new DriverManagerDataSource(
+                environment.getProperty("spring.datasource.url"),
+                environment.getProperty("spring.datasource.username"),
+                environment.getProperty("spring.datasource.password"));
+    }
+
+    @Bean
+    PlatformTransactionManager platformTransactionManager(DataSource driverManagerDataSource) {
+        return new DataSourceTransactionManager(driverManagerDataSource);
+    }
+
+    @Bean
+    JdbcClient jdbcClient(DataSource dataSource) {
+        return JdbcClient.create(dataSource);
+    }
+
+    @Bean
+    AnimalRepository animalRepository(JdbcClient jdbcClient) {
+        return new DefaultAnimalRepository3(jdbcClient);
+    }
+
+    @Bean
+    TransactionTemplate transactionTemplate(PlatformTransactionManager platformTransactionManager) {
+        return new TransactionTemplate(platformTransactionManager);
+    }
+
+    @EventListener
+    void after(ContextRefreshedEvent contextRefreshedEvent) {
+        IO.println("application context refreshed " + contextRefreshedEvent);
+    }
+
+
+}
+
 
 public class BeansToBootApplication {
 
     public static void main(String[] args) {
-        var db = new DriverManagerDataSource(
-                "jdbc:postgresql://localhost:5432/mydatabase", "myuser", "secret");
-        var jdbc = JdbcClient.create(db);
-        var txManager = new DataSourceTransactionManager(db);
-        var transactionTemplate = new TransactionTemplate(txManager);
-        var animals = new DefaultAnimalRepository3(jdbc);
-        var txAnimals = (AnimalRepository) Transactions.proxy(animals, transactionTemplate);
+        var ac = new AnnotationConfigApplicationContext(MyConfiguration.class);
+        var txAnimals = ac.getBean(AnimalRepository.class);
         test(txAnimals);
     }
 
@@ -72,47 +109,7 @@ record Animal(int id, String name, String description, Type type) {
     }
 }
 
-
-
-class Transactions {
-
-    private static Object jdkProxy(Object target, TransactionTemplate tt) {
-        return Proxy.newProxyInstance(target.getClass().getClassLoader(),
-                target.getClass().getInterfaces(), (_, method, args) ->
-                        delegate(tt, target, method, args));
-    }
-
-    static Object proxy(Object target, TransactionTemplate tt) {
-        var pfb = new ProxyFactoryBean();
-        pfb.setTarget(target);
-        pfb.setProxyTargetClass(true);
-        for (var c : target.getClass().getInterfaces())
-            pfb.addInterface(c);
-        pfb.addAdvice((MethodInterceptor) invocation ->
-                delegate(tt, target, invocation.getMethod(), invocation.getArguments()));
-        return pfb.getObject();
-    }
-
-    private static Object delegate(
-            TransactionTemplate transactionTemplate,//
-            Object target, //
-            Method m,//
-            Object[] parms//
-    ) {
-        return transactionTemplate.execute(_ -> {
-            try {
-                IO.println("before the tx");
-                var res = m.invoke(target, parms);
-                IO.println("after the tx");
-                return res;
-            }//
-            catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-}
-
+@Transactional
 class DefaultAnimalRepository3 implements AnimalRepository {
 
     private final JdbcClient jdbcClient;
