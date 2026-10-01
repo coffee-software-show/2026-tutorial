@@ -1,15 +1,9 @@
 package com.example.beans_to_boot.three;
 
 import org.aopalliance.intercept.MethodInterceptor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.aop.framework.ProxyFactoryBean;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -18,9 +12,17 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 // AOP with jdk/cglib proxies
+
+interface AnimalRepository {
+
+    Collection<Animal> findAll();
+
+    Animal save(String name, String description, Animal.Type type);
+
+    void deleteAll();
+}
 
 public class BeansToBootApplication {
 
@@ -53,15 +55,6 @@ public class BeansToBootApplication {
     }
 }
 
-interface AnimalRepository {
-
-    Collection<Animal> findAll();
-
-    Animal save(String name, String description, Animal.Type type);
-
-    void deleteAll();
-}
-
 record Animal(int id, String name, String description, Type type) {
 
     enum Type {
@@ -73,7 +66,6 @@ record Animal(int id, String name, String description, Type type) {
         OTHER
     }
 }
-
 
 
 class Transactions {

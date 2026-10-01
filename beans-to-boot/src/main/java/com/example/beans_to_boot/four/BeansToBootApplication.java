@@ -1,6 +1,9 @@
 package com.example.beans_to_boot.four;
 
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
@@ -18,6 +21,15 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.sql.DataSource;
 import java.util.Collection;
 import java.util.Set;
+
+interface AnimalRepository {
+
+    Collection<Animal> findAll();
+
+    Animal save(String name, String description, Animal.Type type);
+
+    void deleteAll();
+}
 
 // Spring Framework
 @ComponentScan
@@ -56,7 +68,6 @@ class MyConfiguration {
 
 }
 
-
 public class BeansToBootApplication {
 
    /* public static void main(String[] args) {
@@ -79,15 +90,6 @@ public class BeansToBootApplication {
         IO.println("===================================");
         repository.findAll().forEach(IO::println);
     }
-}
-
-interface AnimalRepository {
-
-    Collection<Animal> findAll();
-
-    Animal save(String name, String description, Animal.Type type);
-
-    void deleteAll();
 }
 
 record Animal(int id, String name, String description, Type type) {

@@ -2,12 +2,19 @@ package com.example.beans_to_boot.two;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Collection;
+
+interface AnimalRepository {
+
+    Collection<Animal> findAll();
+
+    Animal save(String name, String description, Animal.Type type);
+
+    void deleteAll();
+}
 
 // "good" OOP
 public class BeansToBootApplication {
@@ -35,15 +42,6 @@ public class BeansToBootApplication {
         IO.println("===================================");
         repository.findAll().forEach(IO::println);
     }
-}
-
-interface AnimalRepository {
-
-    Collection<Animal> findAll();
-
-    Animal save(String name, String description, Animal.Type type);
-
-    void deleteAll();
 }
 
 record Animal(int id, String name, String description, Type type) {

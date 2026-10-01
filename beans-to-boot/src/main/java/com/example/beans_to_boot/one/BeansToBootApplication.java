@@ -9,6 +9,14 @@ import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.Collection;
 
+interface AnimalRepository {
+    Collection<Animal> findAll();
+
+    Animal save(String name, String description, Animal.Type type);
+
+    void deleteAll();
+}
+
 // mistakes were made.
 public class BeansToBootApplication {
 
@@ -33,14 +41,6 @@ public class BeansToBootApplication {
         IO.println("===================================");
         repository.findAll().forEach(IO::println);
     }
-}
-
-interface AnimalRepository {
-    Collection<Animal> findAll();
-
-    Animal save(String name, String description, Animal.Type type);
-
-    void deleteAll();
 }
 
 record Animal(int id, String name, String description, Type type) {
@@ -93,7 +93,7 @@ class DefaultAnimalRepository3 implements AnimalRepository {
                 .sql("INSERT INTO animal (name, description, type) VALUES (?, ?, ?)")
                 .params(name, description, type.name())
                 .update(gkh);
-        return this.findById(((Number)gkh.getKeys().get ("id")).intValue() );
+        return this.findById(((Number) gkh.getKeys().get("id")).intValue());
 
     }
 
@@ -145,12 +145,12 @@ class DefaultAnimalRepository2 implements AnimalRepository {
 
         try (var c = this.dataSource.getConnection();
              var p = c.prepareStatement("INSERT INTO animal (name, description, type) VALUES (?, ?, ?)",
-                     new String[]{"id"});) {
+                     new String[]{"id"})) {
             p.setString(1, name);
             p.setString(2, description);
             p.setString(3, type.name());
             if (p.executeUpdate() > 0) {
-                try (var generatedKeys = p.getGeneratedKeys();) {
+                try (var generatedKeys = p.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         var id = generatedKeys.getInt(1);
                         return this.findById(id);
@@ -168,7 +168,7 @@ class DefaultAnimalRepository2 implements AnimalRepository {
     @Override
     public void deleteAll() {
         try (var c = this.dataSource.getConnection();
-             var p = c.prepareStatement("delete from animal");) {
+             var p = c.prepareStatement("delete from animal")) {
             p.executeUpdate();
         }//
         catch (Exception e) {
@@ -186,7 +186,7 @@ class DefaultAnimalRepository1 implements AnimalRepository {
     @Override
     public void deleteAll() {
         try (var c = this.dataSource.getConnection();
-             var p = c.prepareStatement("delete from animal");) {
+             var p = c.prepareStatement("delete from animal")) {
             p.executeUpdate();
         }//
         catch (Exception e) {
@@ -226,12 +226,12 @@ class DefaultAnimalRepository1 implements AnimalRepository {
 
         try (var c = this.dataSource.getConnection();
              var p = c.prepareStatement("INSERT INTO animal (name, description, type) VALUES (?, ?, ?)",
-                     new String[]{"id"});) {
+                     new String[]{"id"})) {
             p.setString(1, name);
             p.setString(2, description);
             p.setString(3, type.name());
             if (p.executeUpdate() > 0) {
-                try (var generatedKeys = p.getGeneratedKeys();) {
+                try (var generatedKeys = p.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         var id = generatedKeys.getInt(1);
                         return this.findById(id);

@@ -22,37 +22,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.Set;
 
+interface AnimalRepository {
+
+    Collection<Animal> findAll();
+
+    Animal save(String name, String description, Animal.Type type);
+
+    void deleteAll();
+}
+
 // Spring Boot
 @SpringBootApplication
 @ImportRuntimeHints(BeansToBootApplication.Hints.class)
 public class BeansToBootApplication {
 
-    @EventListener
-    void after(ContextRefreshedEvent contextRefreshedEvent) {
-        IO.println("application context refreshed " + contextRefreshedEvent);
-    }
-
-    @Bean
-    ApplicationRunner runner(AnimalRepository repository) {
-        return _ -> test(repository);
-    }
-
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(BeansToBootApplication.class, args);
-    }
-
-    static class Hints implements RuntimeHintsRegistrar {
-
-        @Override
-        public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
-            hints.reflection().registerType(TypeReference.of("com.google.protobuf.ExtensionRegistry"),
-                    MemberCategory.values());
-        }
-    }
-
-    @Bean
-    JdbcPostgresDialect jdbcPostgresDialect() {
-        return JdbcPostgresDialect.INSTANCE;
     }
 
     static void test(AnimalRepository repository) {
@@ -70,16 +55,31 @@ public class BeansToBootApplication {
         repository.findAll().forEach(IO::println);
     }
 
+    @EventListener
+    void after(ContextRefreshedEvent contextRefreshedEvent) {
+        IO.println("application context refreshed " + contextRefreshedEvent);
+    }
 
-}
+    @Bean
+    ApplicationRunner runner(AnimalRepository repository) {
+        return _ -> test(repository);
+    }
 
-interface AnimalRepository {
+    @Bean
+    JdbcPostgresDialect jdbcPostgresDialect() {
+        return JdbcPostgresDialect.INSTANCE;
+    }
 
-    Collection<Animal> findAll();
+    static class Hints implements RuntimeHintsRegistrar {
 
-    Animal save(String name, String description, Animal.Type type);
+        @Override
+        public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+            hints.reflection().registerType(TypeReference.of("com.google.protobuf.ExtensionRegistry"),
+                    MemberCategory.values());
+        }
+    }
 
-    void deleteAll();
+
 }
 
 record Animal(int id, String name, String description, Type type) {
