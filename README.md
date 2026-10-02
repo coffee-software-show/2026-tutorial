@@ -90,11 +90,12 @@ in grpc
 ## data 
 * flyway 
 * jdbc client 
+* spring data repositories
 * lazy connection proxies 
 * elasticsearch?
 
 ### notes 
-should i just take the existing code and create the beginnings of a new service, called `http-service`? i think so. make sure to preserve only the sixth package when copying over the old code. i should re-initialize the whole thing from start.spring.io to use spring data jdbc, elasticsearch, web, postgresql.
+should i just take the existing code and create the beginnings of a new service, called `data`? i think so. make sure to preserve only the sixth package when copying over the old code. i should re-initialize the whole thing from start.spring.io to use spring data jdbc, elasticsearch, web, postgresql.
 
 ## Desk check
 
