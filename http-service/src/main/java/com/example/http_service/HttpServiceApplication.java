@@ -30,8 +30,6 @@ public class HttpServiceApplication {
             IO.println("== search 'layzy' -- fuzzy, note the typo (elasticsearch) ==");
             animals.search("layzy").forEach(IO::println);
 
-            IO.println("== by type CAT (elasticsearch) ==");
-            animals.byType(Animal.Type.CAT).forEach(IO::println);
         };
     }
 

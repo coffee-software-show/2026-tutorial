@@ -29,11 +29,6 @@ class AnimalController {
         return this.animalsService.search(query);
     }
 
-    @GetMapping("/animals/by-type")
-    Collection<Animal> byType(@RequestParam Animal.Type type) {
-        return this.animalsService.byType(type);
-    }
-
     @PostMapping("/animals")
     Animal add(@RequestBody Animal animal) {
         return this.animalsService.add(animal);

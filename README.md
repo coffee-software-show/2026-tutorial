@@ -7,7 +7,9 @@
 - is this stuff still relevant in the age of AI? 
 - more than ever! 
 - lot's of code doesnt mean better code 
-- 
+- somebody needs to know waht good looks like. u need to know what ur looking for. u may not remember every little thing, but u need to know whats possible.
+- ths video is a breadth-first look at building production-worthy systems and services with Spring 
+- watch all of it, and emerge with a familiarity with a good chunk of the spring landscape. not all of it, of course, but a lot.
 
 ## Desk check
 
@@ -110,6 +112,8 @@ in grpc
 * virtual threads
 * lazy connection proxies 
 * elasticsearch?
+* net.ttddyy.observation : datasource-micrometer-spring-boot-starter
+
 
 ### notes 
 should i just take the existing code and create the beginnings of a new service, called `data`? i think so. make sure to preserve only the sixth package when copying over the old code. i should re-initialize the whole thing from start.spring.io to use spring data jdbc, elasticsearch, web, postgresql.
@@ -210,56 +214,23 @@ class AnimalsService {
 
 ```
 
-## testing
-
-- Basics of testing
-- Boot slices
-
-## observability
-
-- actuator
-    - Metrics
-    - Health indicators
-    - sboms
-    - git commit id plugin
-- micrometer
-    - Gauges
-    - Timers
-    - Meters
-    - OpenTelemetry
 
 ## Batch
 
-weve got a few records, but we wanna load all of 'em. we could have millions! this is a job for spring batch!
+weve got a few records, but how do we get a batch of data into the system? all of 'em. we could have millions! this is a job for spring batch!
 uses: spring batch, jdbc, postgres, flyway,
 
 - choose the jdbc implementation
-- to load all the animals from `src/main/resources/animals.csv` to `animals`.
+- to load all the animals from `src/main/resources/animals.csv` to `animals`
 
-### data
+### notes 
+- add spring batch jdbc to the data project. 
+- change the code so the 'runner' is gone 
+- well build a job that loads all the data from the animals.csv into objects we can interrogate and then uses the newly minted service to add the records to the sql table 
+- two steps
+- 1) tasklet that deletes from the animasl table 
+- 2) reader/writer from .csv to our AnimalService (should we add a batching `add()` method?)
 
-- now that we have our table setup. let's build a service.
-- the animals ('pooch palace') api offers search, listing all the animals, saving new animals, and updating them (this
-  is important!); well eventualyl also support adopting them! but.. not now. well also eventually support asking ai
-  questons abotu them
-- the initial implementation uses jdbc
-- then use spring data jdbc to implement the repository
-- ok but how do we connect our client to the backend api
-- eventually, well support: looking at all the animals in the shelter, asking ai questons abotu them, searching with
-  elasticsearch, and adopting
-
-## jdbc
-
-- `JdbcClient`
-- lazy connections
-- schema initialization - earlier we saw this in the batch section so no need to linger
-- Flyway
-- net.ttddyy.observation : datasource-micrometer-spring-boot-starter
-- implement the repository using spring data jdbc
-- use spring data elasticsearch to implement the search capability
-- make sure people see that the initializr has the ability to give me a docker image for elasticsearch
-- we need to read everything, then pass each record back to the update method to force the elasticsearch indexing and so
-  on.
 
 ## web programming
 
@@ -269,6 +240,9 @@ way to access it, did we actually build it? no. no we didnt. we need an API!
 ### apis with spring mvc
 
 - build a simple spring mvc api (`http-service`) on top of the data layer that supports the search, read, update
+- explain that this is not a rest api. 
+- show the https://en.wikipedia.org/wiki/Richardson_Maturity_Model
+- talk about spring hateoas
 - virtual threads
 - nice to have the api, but we need a client that can read it all
 
@@ -294,7 +268,9 @@ way to access it, did we actually build it? no. no we didnt. we need an API!
 
 ## spring shell
 
-- now we can use the httpclient to call the backend api.
+- now we can use the httpclient to call the backend api, too!
+- graalvm 
+
 
 ## graphql
 
@@ -459,6 +435,26 @@ Observability [Java Flight Recorder (JFR) support :: Spring Batch Reference](htt
 	- Oauth 
 	- GraalVM 
 	- Did Stéphane and Brian’s work on observation land?
+
+
+
+## testing
+
+- Basics of testing
+- Boot slices
+
+## observability
+
+- actuator
+    - Metrics
+    - Health indicators
+    - sboms
+    - git commit id plugin
+- micrometer
+    - Gauges
+    - Timers
+    - Meters
+    - OpenTelemetry
 
 <!-- 
 
