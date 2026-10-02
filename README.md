@@ -232,22 +232,34 @@ uses: spring batch, jdbc, postgres, flyway,
 - 2) reader/writer from .csv to our AnimalService (should we add a batching `add()` method?)
 
 
-## web programming
+## web programming (`http-service`)
 
 its cool that weve got the data situation worked out, but if we build a data layer and dont give our network clients a
 way to access it, did we actually build it? no. no we didnt. we need an API!
 
 ### apis with spring mvc
-
+- spring mvc is a servlet that delegates control to our controller beans 
+- u can tap into the low-level servlet api if u want. u can write or define servlets as beans and Spring will map them to the appropriate lifecycles
+- u can also define things like filters. filters let u intercept the request bound for the system. heres a OncePerRequestFilter that logs access. u can imagine how we might implement security with such a mechanism. well come back to this later.
 - build a simple spring mvc api (`http-service`) on top of the data layer that supports the search, read, update
+- build the first implementation of the GET /animals endpoint to return a colletion of Maps. use API versioning. 
+- introduce a new endpoint that returns all the data (raw `Animal`); use api versioning.
+
+
+## hypermedia (`http-hateoas-service`)
 - explain that this is not a rest api. 
 - show the https://en.wikipedia.org/wiki/Richardson_Maturity_Model
-- talk about spring hateoas
+- the last level has hypermedia
+- talk about spring hateoas - https://en.wikipedia.org/wiki/HATEOAS
 - virtual threads
-- nice to have the api, but we need a client that can read it all
+
+
 
 ### frontend client
-
+- whatever version we use, well need to talk to it. lets look at the most useful two http clients in spring! 
+- resttempalte
+- restclient
+- they share common infrastructure like the http request factory.
 - new application called `http-client`
 - basics of the servlet api
 - controllers
