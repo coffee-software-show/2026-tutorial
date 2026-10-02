@@ -1,7 +1,23 @@
 # 2026 Tutorial
 
-Normally, we kick this discussion off with a desk-check. We're _not_ going to do that, this time. Instead well do
-beans-to-boot, then show optimizations, then do desk check.
+
+## Why This Video?
+
+- i'm often asked if they can recommedn a good tutorial or training. I can. it's these end-to-ends. 
+- is this stuff still relevant in the age of AI? 
+- more than ever! 
+- lot's of code doesnt mean better code 
+- 
+
+## Desk check
+
+- Mise
+- spring javaformat maven plugin
+- Devtools
+- IDEs and their start.spring.io experiences
+- agentic coding
+- Testcontainers && Docker compose
+
 
 ## beans to boot
 
@@ -91,19 +107,108 @@ in grpc
 * flyway 
 * jdbc client 
 * spring data repositories
+* virtual threads
 * lazy connection proxies 
 * elasticsearch?
 
 ### notes 
 should i just take the existing code and create the beginnings of a new service, called `data`? i think so. make sure to preserve only the sixth package when copying over the old code. i should re-initialize the whole thing from start.spring.io to use spring data jdbc, elasticsearch, web, postgresql.
 
-## Desk check
 
-- !!Mise!!
-- spring javaformat maven plugin
-- Devtools
-- IDEs and their start.spring.io experiences
-- Testcontainers && Docker compose
+- copy `Animal` from the last module 
+- repository? it's a one liner! create a typical Spring Data JDBC repository. IMPORTANT: `@Table` to the entity 
+- build a simple (`@Transactional`) service called `AnimalService` with the following methods:  all(), search(String)
+- what about that search? 
+- let's create a AnimalDocument: 
+
+```
+@Document(indexName = "animals")
+record AnimalDocument(
+        @Id String id,
+        @Field(type = FieldType.Text) String name,
+        @Field(type = FieldType.Text) String description,
+        // Keyword, not Text: types are an exact-match facet, not free text to analyze
+        @Field(type = FieldType.Keyword) String type) {
+
+    static AnimalDocument from(Animal animal) {
+        return new AnimalDocument(String.valueOf(animal.id()), animal.name(),
+                animal.description(), animal.type().name());
+    }
+}
+```
+
+- here's an `AnimalSearchRepository`
+```
+
+interface AnimalSearchRepository extends ElasticsearchRepository<AnimalDocument, String> {
+
+    /**
+     * Full-text search across name and description. This is the thing Postgres can't do
+     * well: relevance ranking, analysis, and fuzzy matching on typos.
+     */
+    @Query("""
+            {
+              "multi_match": {
+                "query": "?0",
+                "fields": [ "name^2", "description" ],
+                "fuzziness": "AUTO"
+              }
+            }
+            """)
+    List<AnimalDocument> search(String query);
+
+}
+```
+
+- here's the service
+
+```
+
+@Service
+@Transactional
+class AnimalsService {
+
+    private final AnimalRepository animalRepository;
+
+    private final AnimalSearchRepository animalSearchRepository;
+
+    AnimalsService(AnimalRepository animalRepository, AnimalSearchRepository animalSearchRepository) {
+        this.animalRepository = animalRepository;
+        this.animalSearchRepository = animalSearchRepository;
+    }
+
+    Collection<Animal> all() {
+        return this.animalRepository.findAll();
+    }
+
+    Collection<Animal> search(String query) {
+        var ranked = this.animalSearchRepository.search(query)
+                .stream()
+                .map(AnimalDocument::id)
+                .map(Integer::valueOf)
+                .toList();
+        if (ranked.isEmpty())
+            return List.of();
+        var byId = this.animalRepository.findAllById(ranked)
+                .stream()
+                .collect(Collectors.toMap(Animal::id, Function.identity()));
+        return ranked.stream().map(byId::get).filter(Objects::nonNull).toList();
+    }
+
+    Animal add(Animal animal) {
+        var saved = this.animalRepository.save(animal);
+        this.animalSearchRepository.save(AnimalDocument.from(saved), RefreshPolicy.IMMEDIATE);
+        return saved;
+    }
+
+    void deleteAll() {
+        this.animalRepository.deleteAll();
+        this.animalSearchRepository.deleteAll(RefreshPolicy.IMMEDIATE);
+    }
+
+}
+
+```
 
 ## testing
 

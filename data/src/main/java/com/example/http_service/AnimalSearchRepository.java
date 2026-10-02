@@ -22,6 +22,4 @@ interface AnimalSearchRepository extends ElasticsearchRepository<AnimalDocument,
             """)
     List<AnimalDocument> search(String query);
 
-    /** Derived query, no JSON required — exact match on the keyword field. */
-    List<AnimalDocument> findByType(String type);
 }
