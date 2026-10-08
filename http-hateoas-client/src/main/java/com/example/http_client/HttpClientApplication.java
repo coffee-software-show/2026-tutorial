@@ -5,6 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.http.client.InetAddressFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.client.Traverson;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +18,9 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.registry.ImportHttpServices;
 
 import java.net.InetAddress;
+import java.net.URI;
 import java.util.Collection;
 
-@ImportHttpServices (AnimalsClient.class)
 @SpringBootApplication
 public class HttpClientApplication {
 
@@ -31,29 +35,27 @@ public class HttpClientApplication {
 
 }
 
-interface AnimalsClient {
 
-    @GetExchange ("http://localhost:8081/animals")
-    Collection<Animal> animals();
-}
 
-/*
 @Component
 class AnimalsClient {
 
-    private final RestClient http;
 
-    AnimalsClient(RestClient.Builder http) {
-        this.http = http.build();
-    }
+    private final Traverson traverson = new Traverson(
+            URI.create("http://localhost:8081/"), MediaTypes.HAL_JSON);
 
     Collection<Animal> animals() {
-        return this.http.get()
-                .uri("http://localhost:8081/animals")
-                .retrieve()
-                .body(new ParameterizedTypeReference<Collection<Animal>>() {});
+        var animals = traverson
+                .follow("animals")
+                .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<Animal>>>() {});
+        return animals.getContent()
+                .stream()
+                .map( em -> em.getContent())
+                .toList();
+
+
     }
-} */
+}
 
 record Animal(String name, String description, int id) {
 }

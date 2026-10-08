@@ -237,7 +237,7 @@ uses: spring batch, jdbc, postgres, flyway,
 its cool that weve got the data situation worked out, but if we build a data layer and dont give our network clients a
 way to access it, did we actually build it? no. no we didnt. we need an API!
 
-### apis with spring mvc
+## http service
 - spring mvc is a servlet that delegates control to our controller beans 
 - u can tap into the low-level servlet api if u want. u can write or define servlets as beans and Spring will map them to the appropriate lifecycles
 - u can also define things like filters. filters let u intercept the request bound for the system. heres a OncePerRequestFilter that logs access. u can imagine how we might implement security with such a mechanism. well come back to this later.
@@ -245,20 +245,10 @@ way to access it, did we actually build it? no. no we didnt. we need an API!
 - build the first implementation of the GET /animals endpoint to return a colletion of Maps. use API versioning. 
 - introduce a new endpoint that returns all the data (raw `Animal`); use api versioning.
 
-
-## hypermedia (`http-hateoas-service`)
-- explain that this is not a rest api. 
-- show the https://en.wikipedia.org/wiki/Richardson_Maturity_Model
-- the last level has hypermedia
-- talk about spring hateoas - https://en.wikipedia.org/wiki/HATEOAS
-- virtual threads
-
-
-
-## frontend client
-- whatever version we use, well need to talk to it. lets look at the most useful two http clients in spring! 
+## http client
+- whatever version we use, well need to talk to it. lets look at the most useful two http clients in spring!
 - new application called `http-client`.
-- there's a dedicated starter for this 
+- there's a dedicated starter for this
 - resttempalte
 - restclient
 - they share common infrastructure like the http request factory.
@@ -267,16 +257,37 @@ way to access it, did we actually build it? no. no we didnt. we need an API!
 - mvc + jte || thymeleaf
 - tomcat customization
 - build a simple .html page. it'll call the new service we've just stood up. but how?
-
-## http clients
 - the new starter
 - `RestClient`
-- declarative interface clients
-- so now we have an http client and service. but this isn't the only game in town
-- while were at it, lets pull in some catfacts
-- at this point, we should have a animals controller in the root package supporting `POST` and `GET` requests for
-  `/dogs` and `/cats`, filtering behind the scenes the one `animals` table. we should have a search '/search' endpoint
-- let's rebuild the application to use graphql
+- declarative interface clients && `@ImportHttpServices`
+- server-side request forgery protection with `InetAddressFilter`
+
+## http-hateoas-service
+
+notice that i avoided calling the stuff we built a 'REST' API. REST implies hypermedia. 
+
+- explain that this is not a rest api. 
+- show the https://en.wikipedia.org/wiki/Richardson_Maturity_Model
+- the last level has hypermedia
+- talk about spring hateoas - https://en.wikipedia.org/wiki/HATEOAS
+- virtual threads
+
+lets refactor the code to use Spring HATEOAS.
+
+## http-hateoas-client 
+
+- now that we've got hypermedia, lets rework our client to use the hateoas endpoints.
+- traverson 
+- nb: we need to manually add `com.jayway.jsonpath`:`json-path`
+
+## http-graphql-service 
+
+## http-graphql-client
+
+
+## grpc-service
+
+## grapc-client
 
 ## spring shell
 
