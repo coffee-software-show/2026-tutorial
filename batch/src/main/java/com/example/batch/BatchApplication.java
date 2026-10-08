@@ -78,7 +78,9 @@ class ResetStepConfiguration {
 class IngestStepConfiguration {
 
     @Bean
-    FlatFileItemReader<Dog> flatFileCsvItemReader(@Value("classpath:/animals.csv") Resource csv) {
+    FlatFileItemReader<Dog> flatFileCsvItemReader(//
+            @Value("classpath:/animals.csv") Resource csv//
+    ) {
         return new FlatFileItemReaderBuilder<Dog>()
                 .name("flatFileCsvItemReader")
                 .resource(csv)

@@ -3,7 +3,7 @@
 
 ## Why This Video?
 
-- i'm often asked if they can recommedn a good tutorial or training. I can. it's these end-to-ends. 
+- i'm often asked if they can recommend a good tutorial or training. I can. it's these end-to-ends. 
 - is this stuff still relevant in the age of AI? 
 - more than ever! 
 - lot's of code doesnt mean better code 
@@ -105,7 +105,7 @@ in grpc
   ones i have globally.
 
 
-## data 
+## Data 
 * flyway 
 * jdbc client 
 * spring data repositories
@@ -232,7 +232,7 @@ uses: spring batch, jdbc, postgres, flyway,
 - 2) reader/writer from .csv to our AnimalService (should we add a batching `add()` method?)
 
 
-## web programming (`http-service`)
+## Web Programming (`http-service`)
 
 its cool that weve got the data situation worked out, but if we build a data layer and dont give our network clients a
 way to access it, did we actually build it? no. no we didnt. we need an API!
@@ -255,12 +255,13 @@ way to access it, did we actually build it? no. no we didnt. we need an API!
 
 
 
-### frontend client
+## frontend client
 - whatever version we use, well need to talk to it. lets look at the most useful two http clients in spring! 
+- new application called `http-client`.
+- there's a dedicated starter for this 
 - resttempalte
 - restclient
 - they share common infrastructure like the http request factory.
-- new application called `http-client`
 - basics of the servlet api
 - controllers
 - mvc + jte || thymeleaf
@@ -268,7 +269,6 @@ way to access it, did we actually build it? no. no we didnt. we need an API!
 - build a simple .html page. it'll call the new service we've just stood up. but how?
 
 ## http clients
-
 - the new starter
 - `RestClient`
 - declarative interface clients

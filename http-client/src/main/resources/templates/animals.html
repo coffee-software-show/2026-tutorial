@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Animals</title>
+</head>
+<body>
+<h1>Animals</h1>
+
+<table th:if="${not #lists.isEmpty(animals)}">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="animal : ${animals}">
+        <td th:text="${animal.id}">1</td>
+        <td th:text="${animal.name}">Lion</td>
+        <td th:text="${animal.description}">A large wild cat.</td>
+    </tr>
+    </tbody>
+</table>
+
+<p th:if="${#lists.isEmpty(animals)}">No animals found.</p>
+
+</body>
+</html>
+
