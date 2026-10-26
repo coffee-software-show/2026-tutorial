@@ -20,6 +20,7 @@ import org.springframework.web.service.registry.ImportHttpServices;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Objects;
 
 @SpringBootApplication
 public class HttpClientApplication {
@@ -35,11 +36,8 @@ public class HttpClientApplication {
 
 }
 
-
-
 @Component
 class AnimalsClient {
-
 
     private final Traverson traverson = new Traverson(
             URI.create("http://localhost:8081/"), MediaTypes.HAL_JSON);
@@ -48,9 +46,10 @@ class AnimalsClient {
         var animals = traverson
                 .follow("animals")
                 .toObject(new ParameterizedTypeReference<CollectionModel<EntityModel<Animal>>>() {});
-        return animals.getContent()
+        return Objects.requireNonNull(animals)//
+                .getContent()
                 .stream()
-                .map( em -> em.getContent())
+                .map(EntityModel::getContent)
                 .toList();
 
 

@@ -1,0 +1,20 @@
+type Query  {
+    animals : [Animal]
+}
+
+type Mutation {
+
+    create (name:String, description:String, type: String) : Animal
+}
+
+type Animal {
+    id : Int
+    name :String
+    description :String
+    typeDetails : TypeDetails
+}
+
+type TypeDetails {
+    wikipedia: String
+    type : String
+}
