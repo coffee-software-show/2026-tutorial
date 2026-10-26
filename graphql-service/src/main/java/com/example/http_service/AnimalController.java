@@ -27,7 +27,7 @@ class AnimalController {
     @BatchMapping
     Map<Animal, TypeDetails> typeDetails(List<Animal> animals) {
         var map = new HashMap<Animal, TypeDetails>();
-        this.animalsService.all().forEach(a -> map.put(a, this.typeDetails(a)));
+        animals.forEach(a -> map.put(a, this.typeDetails(a)));
         return map;
     }
 
