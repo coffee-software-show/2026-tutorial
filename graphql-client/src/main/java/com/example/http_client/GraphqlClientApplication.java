@@ -3,7 +3,6 @@ package com.example.http_client;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.http.client.InetAddressFilter;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.graphql.client.GraphQlClient;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.graphql.client.HttpSyncGraphQlClient;
@@ -49,12 +48,14 @@ class AnimalsClient {
     Collection<Animal> animals() {
         return this.httpGraphQlClient
                 .document("""
-                        animals {
-                         id, name, typeDetails { type, wikipedia }, description
+                        {
+                          animals {
+                            id, name, typeDetails { type, wikipedia }, description
+                          }
                         }
                         """)
-                .executeSync()
-                .toEntity(new ParameterizedTypeReference<Collection<Animal>>() {});
+                .retrieveSync("animals")
+                .toEntityList(Animal.class);
     }
 }
 
